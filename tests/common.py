@@ -71,6 +71,11 @@ def terminate(ghostunnel):
     except BaseException:
         pass
 
+def urlopen(path, cafile='root.crt'):
+    """HTTPS GET using a CA bundle (Python 3.12+ dropped urlopen cafile=)."""
+    ctx = ssl.create_default_context(cafile=cafile)
+    return urllib.request.urlopen(path, context=ctx)
+
 def status_info():
     """Fetch info from status port"""
     ctx = ssl.create_default_context()

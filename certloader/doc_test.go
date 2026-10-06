@@ -38,5 +38,5 @@ func ExampleCertificate() {
 
 	// Reload a certificate. Will re-read the files from disk, and update the
 	// certificate if there have been any changes.
-	cert.Reload()
+	_ = cert.Reload()
 }

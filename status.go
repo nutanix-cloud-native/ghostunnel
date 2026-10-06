@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -31,7 +32,7 @@ type statusDialer struct {
 	dial func() (net.Conn, error)
 }
 
-func (sd statusDialer) Dial(network, addr string) (net.Conn, error) {
+func (sd statusDialer) DialContext(_ context.Context, network, addr string) (net.Conn, error) {
 	return sd.dial()
 }
 
@@ -68,7 +69,7 @@ type statusResponse struct {
 func newStatusHandler(dial func() (net.Conn, error), targetAddress string) *statusHandler {
 	client := http.Client{
 		Transport: &http.Transport{
-			Dial: statusDialer{dial}.Dial,
+			DialContext: statusDialer{dial}.DialContext,
 		},
 	}
 	status := &statusHandler{&sync.Mutex{}, dial, &client, targetAddress, false, false, time.Time{}}
@@ -149,7 +150,7 @@ func (s *statusHandler) checkBackendStatus() error {
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("target returned status: %d", resp.StatusCode)
@@ -159,7 +160,7 @@ func (s *statusHandler) checkBackendStatus() error {
 		if err != nil {
 			return err
 		}
-		conn.Close()
+		_ = conn.Close()
 	}
 
 	return nil

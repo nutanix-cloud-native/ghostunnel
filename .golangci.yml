@@ -1,0 +1,15 @@
+version: "2"
+linters:
+  exclusions:
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - testdata$
+      - vendor$
+      - tests$
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - ineffassign
