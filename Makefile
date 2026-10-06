@@ -1,6 +1,7 @@
-SOURCE_FILES := $(shell find . \( -name '*.go' -not -path './vendor/*' \))
-INTEGRATION_TESTS := $(shell find tests -name 'test-*.py' -exec basename {} .py \;)
+SOURCE_FILES := $(shell go list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}' ./...)
+INTEGRATION_TESTS := $(patsubst tests/%.py,%,$(wildcard tests/test-*.py))
 VERSION := $(shell git describe --always --dirty)
+GO_VERSION ?= 1.27
 
 # Ghostunnel binary
 ghostunnel: $(SOURCE_FILES)

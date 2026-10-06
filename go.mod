@@ -1,53 +1,43 @@
 module github.com/ghostunnel/ghostunnel
 
 require (
-	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/Microsoft/go-winio v0.5.2
 	github.com/caddyserver/certmagic v0.16.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/deathowl/go-metrics-prometheus v0.0.0-20200518174047-74482eab5bfb
+	github.com/github/smimesign v0.2.0
 	github.com/hashicorp/go-syslog v1.0.0
-	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/kavu/go_reuseport v1.5.0
 	github.com/letsencrypt/pkcs11key/v4 v4.0.0
 	github.com/mholt/acmez v1.0.2
-	github.com/miekg/pkcs11 v1.1.1 // indirect
-	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mwitkow/go-http-dialer v0.0.0-20161116154839-378f744fb2b8
+	github.com/open-policy-agent/opa v0.44.0
 	github.com/pires/go-proxyproto v0.6.2
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/prometheus/common v0.37.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spiffe/go-spiffe/v2 v2.1.1
 	github.com/square/certigo v1.16.1-0.20220921173659-75f2ec06b4a5
 	github.com/square/go-sq-metrics v0.0.0-20170531223841-ae72f332d0d9
 	github.com/stretchr/testify v1.8.0
-	golang.org/x/sys v0.5.0 // indirect
-	google.golang.org/genproto v0.0.0-20220921223823-23cae91e6737 // indirect
-	google.golang.org/grpc v1.49.0
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-)
-
-require (
-	github.com/Microsoft/go-winio v0.5.2
-	github.com/github/smimesign v0.2.0
-	github.com/open-policy-agent/opa v0.44.0
-	github.com/pkg/errors v0.9.1
 	golang.org/x/net v0.7.0
+	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
 require (
 	bitbucket.org/creachadair/shell v0.0.7 // indirect
 	cloud.google.com/go/compute v1.10.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -84,6 +74,8 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
+	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jhump/protoreflect v1.13.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
@@ -95,12 +87,15 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/miekg/dns v1.1.49 // indirect
+	github.com/miekg/pkcs11 v1.1.1 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -146,10 +141,12 @@ require (
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220920022843-2ce7c2934d45 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20220921223823-23cae91e6737 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -158,4 +155,4 @@ require (
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
 )
 
-go 1.18
+go 1.27
