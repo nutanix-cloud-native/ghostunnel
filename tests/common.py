@@ -72,8 +72,15 @@ def terminate(ghostunnel):
         pass
 
 def urlopen(path, cafile='root.crt'):
-    """HTTPS GET using a CA bundle (Python 3.12+ dropped urlopen cafile=)."""
-    ctx = ssl.create_default_context(cafile=cafile)
+    """HTTPS GET using a CA bundle (urlopen cafile= was removed in 3.12).
+
+    Use SSLContext, not create_default_context: Python 3.13 enables
+    VERIFY_X509_STRICT, which rejects the test CAs.
+    """
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.check_hostname = False
+    ctx.load_verify_locations(cafile)
     return urllib.request.urlopen(path, context=ctx)
 
 def status_info():
@@ -116,15 +123,30 @@ class RootCert:
             'openssl genrsa -out {0}.key 2048'.format(name),
             shell=True,
             stderr=FNULL)
+        fd, openssl_config = mkstemp(dir='.')
+        os.write(fd, b"""[req]
+distinguished_name = req_dn
+x509_extensions = v3_ca
+prompt = no
+[req_dn]
+[v3_ca]
+basicConstraints = critical,CA:TRUE
+keyUsage = critical,keyCertSign,cRLSign
+""")
+        os.close(fd)
         call(
-            'openssl req -x509 -new -key {0}.key -days 5 -out {0}_temp.crt -subj /C=US/ST=CA/O=ghostunnel/OU={0}'.format(name),
+            'openssl req -x509 -new -key {0}.key -days 5 -out {0}_temp.crt -subj /C=US/ST=CA/O=ghostunnel/OU={0} -config {1} -extensions v3_ca'.format(
+                name, openssl_config),
             shell=True)
+        os.remove(openssl_config)
         os.rename("{0}_temp.crt".format(name), "{0}.crt".format(name))
         call('chmod 600 {0}.key'.format(name), shell=True)
 
     def create_signed_cert(self, ou, san="IP:127.0.0.1,IP:::1,DNS:localhost"):
         print_ok("generating {0}.key, {0}.crt, {0}.p12".format(ou))
         fd, openssl_config = mkstemp(dir='.')
+        os.write(fd, "basicConstraints=CA:FALSE\n".encode('utf-8'))
+        os.write(fd, "keyUsage=digitalSignature,keyEncipherment\n".encode('utf-8'))
         os.write(fd, "extendedKeyUsage=clientAuth,serverAuth\n".encode('utf-8'))
         os.write(fd, "subjectAltName = {0}".format(san).encode('utf-8'))
         call("openssl genrsa -out {0}.key 2048".format(ou),
