@@ -21,6 +21,7 @@ RUN cd /go/src/github.com/mesosphere/ghostunnel && \
 
 # Create a multi-stage build with the binary
 FROM alpine:3.24.2
+LABEL org.opencontainers.image.source=https://github.com/alpinelinux/docker-alpine
 
 RUN apk add --no-cache --update libtool curl
 COPY --from=build /usr/bin/ghostunnel /usr/bin/ghostunnel
