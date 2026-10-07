@@ -71,6 +71,18 @@ def terminate(ghostunnel):
     except BaseException:
         pass
 
+def urlopen(path, cafile='root.crt'):
+    """HTTPS GET using a CA bundle (urlopen cafile= was removed in 3.12).
+
+    Use SSLContext, not create_default_context: Python 3.13 enables
+    VERIFY_X509_STRICT, which rejects the test CAs.
+    """
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.check_hostname = False
+    ctx.load_verify_locations(cafile)
+    return urllib.request.urlopen(path, context=ctx)
+
 def status_info():
     """Fetch info from status port"""
     ctx = ssl.create_default_context()
@@ -111,15 +123,30 @@ class RootCert:
             'openssl genrsa -out {0}.key 2048'.format(name),
             shell=True,
             stderr=FNULL)
+        fd, openssl_config = mkstemp(dir='.')
+        os.write(fd, b"""[req]
+distinguished_name = req_dn
+x509_extensions = v3_ca
+prompt = no
+[req_dn]
+[v3_ca]
+basicConstraints = critical,CA:TRUE
+keyUsage = critical,keyCertSign,cRLSign
+""")
+        os.close(fd)
         call(
-            'openssl req -x509 -new -key {0}.key -days 5 -out {0}_temp.crt -subj /C=US/ST=CA/O=ghostunnel/OU={0}'.format(name),
+            'openssl req -x509 -new -key {0}.key -days 5 -out {0}_temp.crt -subj /C=US/ST=CA/O=ghostunnel/OU={0} -config {1} -extensions v3_ca'.format(
+                name, openssl_config),
             shell=True)
+        os.remove(openssl_config)
         os.rename("{0}_temp.crt".format(name), "{0}.crt".format(name))
         call('chmod 600 {0}.key'.format(name), shell=True)
 
     def create_signed_cert(self, ou, san="IP:127.0.0.1,IP:::1,DNS:localhost"):
         print_ok("generating {0}.key, {0}.crt, {0}.p12".format(ou))
         fd, openssl_config = mkstemp(dir='.')
+        os.write(fd, "basicConstraints=CA:FALSE\n".encode('utf-8'))
+        os.write(fd, "keyUsage=digitalSignature,keyEncipherment\n".encode('utf-8'))
         os.write(fd, "extendedKeyUsage=clientAuth,serverAuth\n".encode('utf-8'))
         os.write(fd, "subjectAltName = {0}".format(san).encode('utf-8'))
         call("openssl genrsa -out {0}.key 2048".format(ou),
@@ -225,8 +252,24 @@ class TcpServer(MySocket):
 ######################### TLS #########################
 
 
+def _tls_context(server_side, cert=None, ca=None, cert_reqs=ssl.CERT_REQUIRED):
+    """SSLContext replacement for removed ssl.wrap_socket (Python 3.12+)."""
+    protocol = ssl.PROTOCOL_TLS_SERVER if server_side else ssl.PROTOCOL_TLS_CLIENT
+    ctx = ssl.SSLContext(protocol)
+    ctx.verify_mode = cert_reqs
+    # Match legacy wrap_socket: certs use OU, not 127.0.0.1.
+    ctx.check_hostname = False
+    if ca:
+        ctx.load_verify_locations('{0}.crt'.format(ca))
+    if cert is not None:
+        ctx.load_cert_chain(
+            certfile='{0}.crt'.format(cert),
+            keyfile='{0}.key'.format(cert))
+    return ctx
+
+
 class TlsClient(MySocket):
-    def __init__(self, cert, ca, port, ssl_version=ssl.PROTOCOL_SSLv23):
+    def __init__(self, cert, ca, port, ssl_version=None):
         super().__init__()
         self.cert = cert
         self.ca = ca
@@ -239,22 +282,8 @@ class TlsClient(MySocket):
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(TIMEOUT)
-                if self.cert is not None:
-                    self.socket = ssl.wrap_socket(sock,
-                                                  keyfile='{0}.key'.format(
-                                                      self.cert),
-                                                  certfile='{0}.crt'.format(
-                                                      self.cert),
-                                                  ca_certs='{0}.crt'.format(
-                                                      self.ca),
-                                                  cert_reqs=ssl.CERT_REQUIRED,
-                                                  ssl_version=self.ssl_version)
-                else:
-                    self.socket = ssl.wrap_socket(sock,
-                                                  ca_certs='{0}.crt'.format(
-                                                      self.ca),
-                                                  cert_reqs=ssl.CERT_REQUIRED,
-                                                  ssl_version=self.ssl_version)
+                ctx = _tls_context(False, cert=self.cert, ca=self.ca)
+                self.socket = ctx.wrap_socket(sock)
                 self.socket.connect((LOCALHOST, self.port))
 
                 if peer is not None:
@@ -281,7 +310,7 @@ class TlsServer(MySocket):
             ca,
             port,
             cert_reqs=ssl.CERT_REQUIRED,
-            ssl_version=ssl.PROTOCOL_SSLv23):
+            ssl_version=None):
         super().__init__()
         self.cert = cert
         self.ca = ca
@@ -296,15 +325,9 @@ class TlsServer(MySocket):
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener.bind((LOCALHOST, self.port))
         listener.listen(1)
-        self.tls_listener = ssl.wrap_socket(listener,
-                                            server_side=True,
-                                            keyfile='{0}.key'.format(
-                                                self.cert),
-                                            certfile='{0}.crt'.format(
-                                                self.cert),
-                                            ca_certs='{0}.crt'.format(self.ca),
-                                            cert_reqs=self.cert_reqs,
-                                            ssl_version=self.ssl_version)
+        ctx = _tls_context(
+            True, cert=self.cert, ca=self.ca, cert_reqs=self.cert_reqs)
+        self.tls_listener = ctx.wrap_socket(listener, server_side=True)
 
     def accept(self):
         self.socket, _ = self.tls_listener.accept()

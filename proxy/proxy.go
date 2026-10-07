@@ -118,7 +118,7 @@ func (p *Proxy) Shutdown() {
 		return
 	}
 	atomic.StoreInt32(&p.quit, 1)
-	p.Listener.Close()
+	_ = p.Listener.Close()
 	p.handlers.Done()
 }
 
@@ -151,7 +151,7 @@ func (p *Proxy) Accept() {
 		totalCounter.Inc(1)
 
 		go connTimer.Time(func() {
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 			defer openCounter.Dec(1)
 
 			err := forceHandshake(p.ConnectTimeout, conn)
@@ -235,8 +235,8 @@ func (p *Proxy) fuse(client, backend net.Conn) {
 
 // Copy data between two connections
 func (p *Proxy) copyData(dst net.Conn, src net.Conn) {
-	defer dst.Close()
-	defer src.Close()
+	defer func() { _ = dst.Close() }()
+	defer func() { _ = src.Close() }()
 
 	_, err := io.Copy(dst, src)
 

@@ -20,7 +20,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -57,12 +57,12 @@ var (
 
 // Optional flags (enabled conditionally based on build)
 var (
-	keychainIdentity     *string //nolint:golint,unused
-	keychainIssuer       *string //nolint:golint,unused
-	keychainRequireToken *bool   //nolint:golint,unused
-	pkcs11Module         *string //nolint:golint,unused
-	pkcs11TokenLabel     *string //nolint:golint,unused
-	pkcs11PIN            *string //nolint:golint,unused
+	keychainIdentity     *string //nolint:unused
+	keychainIssuer       *string //nolint:unused
+	keychainRequireToken *bool   //nolint:unused
+	pkcs11Module         *string //nolint:unused
+	pkcs11TokenLabel     *string //nolint:unused
+	pkcs11PIN            *string //nolint:unused
 )
 
 // Main flags (always supported)
@@ -134,7 +134,7 @@ var (
 	quiet         = app.Flag("quiet", "Silence log messages (can be all, conns, conn-errs, handshake-errs; repeat flag for more than one)").Default("").Enums("", "all", "conns", "handshake-errs", "conn-errs")
 
 	// Man page /help
-	helpMan = app.Flag("help-custom-man", "Generate a man page.").Hidden().PreAction(generateManPage).Bool()
+	_ = app.Flag("help-custom-man", "Generate a man page.").Hidden().PreAction(generateManPage).Bool()
 )
 
 func init() {
@@ -191,7 +191,7 @@ func initLogger(syslog bool, flags []string) (err error) {
 	for _, flag := range flags {
 		if flag == "all" {
 			// If --quiet=all if passed, disable all logging
-			logger = log.New(ioutil.Discard, "", 0)
+			logger = log.New(io.Discard, "", 0)
 			return
 		}
 	}

@@ -19,7 +19,6 @@ package main
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"testing"
@@ -181,28 +180,28 @@ hHV17et3tJKiSuKwz1wSwx7J5hxxPB38+GhfstzSde5LwuAFTfAn
 var testKeystorePassword = "password"
 
 func TestBuildConfig(t *testing.T) {
-	tmpKeystore, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystore, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpKeystoreNoPrivKey, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystoreNoPrivKey, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpKeystoreSeparateCert, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystoreSeparateCert, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpKeystoreSeparateKey, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystoreSeparateKey, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpKeystore.Write(testKeystore)
-	tmpKeystoreNoPrivKey.Write(testKeystoreNoPrivKey)
+	_, _ = tmpKeystore.Write(testKeystore)
+	_, _ = tmpKeystoreNoPrivKey.Write(testKeystoreNoPrivKey)
 
-	tmpKeystoreSeparateCert.Write([]byte(testKeystoreCertOnly))
-	tmpKeystoreSeparateKey.Write([]byte(testKeystoreKeyPath))
+	_, _ = tmpKeystoreSeparateCert.Write([]byte(testKeystoreCertOnly))
+	_, _ = tmpKeystoreSeparateKey.Write([]byte(testKeystoreKeyPath))
 
-	tmpKeystoreSeparateCert.Sync()
-	tmpKeystoreSeparateKey.Sync()
+	_ = tmpKeystoreSeparateCert.Sync()
+	_ = tmpKeystoreSeparateKey.Sync()
 
-	tmpKeystore.Sync()
+	_ = tmpKeystore.Sync()
 
 	defer os.Remove(tmpKeystore.Name())
 	defer os.Remove(tmpKeystoreNoPrivKey.Name())
@@ -242,16 +241,16 @@ func TestBuildConfig(t *testing.T) {
 }
 
 func TestCipherSuitePreference(t *testing.T) {
-	conf, err := buildConfig("XYZ")
+	_, err := buildConfig("XYZ")
 	assert.NotNil(t, err, "should not be able to build TLS config with invalid cipher suite option")
 
 	_, err = buildServerConfig("XYZ")
 	assert.NotNil(t, err, "should not be able to build TLS config with invalid cipher suite option")
 
-	conf, err = buildConfig("")
+	_, err = buildConfig("")
 	assert.NotNil(t, err, "should not be able to build TLS config wihout cipher suite selection")
 
-	conf, err = buildConfig("CHACHA,AES")
+	conf, err := buildConfig("CHACHA,AES")
 	assert.Nil(t, err, "should be able to build TLS config")
 	assert.True(t, conf.CipherSuites[0] == tls.TLS_CHACHA20_POLY1305_SHA256, "expecting TLS 1.3 ChaCha20")
 
@@ -259,7 +258,7 @@ func TestCipherSuitePreference(t *testing.T) {
 	assert.Nil(t, err, "should be able to build TLS config")
 	assert.True(t, conf.CipherSuites[0] == tls.TLS_AES_128_GCM_SHA256, "expecting TLS 1.3 AES")
 
-	conf, err = buildConfig("AES,CHACHA,UNSAFE-AZURE")
+	_, err = buildConfig("AES,CHACHA,UNSAFE-AZURE")
 	assert.NotNil(t, err, "should not be able to build TLS config with unsafe cipher suite without flag")
 
 	*allowUnsafeCipherSuites = true
@@ -270,17 +269,17 @@ func TestCipherSuitePreference(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
-	tmpKeystore, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystore, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpCaBundle, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpCaBundle, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpCaBundle.WriteString(testCertificate)
-	tmpCaBundle.WriteString("\n")
-	tmpCaBundle.Sync()
-	tmpKeystore.Write(testKeystore)
-	tmpKeystore.Sync()
+	_, _ = tmpCaBundle.WriteString(testCertificate)
+	_, _ = tmpCaBundle.WriteString("\n")
+	_ = tmpCaBundle.Sync()
+	_, _ = tmpKeystore.Write(testKeystore)
+	_ = tmpKeystore.Sync()
 
 	defer os.Remove(tmpCaBundle.Name())
 	defer os.Remove(tmpKeystore.Name())
@@ -288,7 +287,7 @@ func TestReload(t *testing.T) {
 	c, err := buildCertificate(tmpKeystore.Name(), "", "", testKeystorePassword, tmpCaBundle.Name())
 	assert.Nil(t, err, "should be able to build certificate")
 
-	c.Reload()
+	_ = c.Reload()
 }
 
 func TestBuildConfigSystemRoots(t *testing.T) {
@@ -298,16 +297,16 @@ func TestBuildConfigSystemRoots(t *testing.T) {
 		return
 	}
 
-	tmpKeystore, err := ioutil.TempFile("", "ghostunnel-test")
+	tmpKeystore, err := os.CreateTemp("", "ghostunnel-test")
 	panicOnError(err)
 
-	tmpKeystore.Write(testKeystore)
-	tmpKeystore.Sync()
+	_, _ = tmpKeystore.Write(testKeystore)
+	_ = tmpKeystore.Sync()
 
 	defer os.Remove(tmpKeystore.Name())
 
 	c, err := buildCertificate(tmpKeystore.Name(), "", "", testKeystorePassword, "")
 	assert.Nil(t, err, "should be able to build certificate")
 
-	c.Reload()
+	_ = c.Reload()
 }

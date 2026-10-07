@@ -43,7 +43,7 @@ func TestWorkloadAPITLSConfigSource(t *testing.T) {
 
 	source, err := TLSConfigSourceFromWorkloadAPI(workloadAPI.Addr(), log)
 	require.NoError(t, err)
-	defer source.(*spiffeTLSConfigSource).Close()
+	defer func() { _ = source.(*spiffeTLSConfigSource).Close() }()
 
 	// set up server configuration
 	var serverVerifyCallCount int32
@@ -64,13 +64,13 @@ func TestWorkloadAPITLSConfigSource(t *testing.T) {
 	// start up the server
 	listener, err := tls.Listen("tcp", "localhost:0", serverConfig.GetServerConfig())
 	require.NoError(t, err)
-	defer listener.Close()
+	defer func() { _ = listener.Close() }()
 	go func() {
 		t.Logf("ACCEPTING...")
 		conn, err := listener.Accept()
 		t.Logf("ACCEPTED: err=%v", err)
 		if err == nil {
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 			_, err = fmt.Fprintln(conn, "PAYLOAD")
 			t.Logf("WROTE RESPONSE: err=%v", err)
 		}
@@ -81,11 +81,11 @@ func TestWorkloadAPITLSConfigSource(t *testing.T) {
 	conn, err := tls.Dial(listener.Addr().Network(), listener.Addr().String(), clientConfig.GetClientConfig())
 	t.Logf("DIALED: err=%v", err)
 	require.NoError(t, err)
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// read the response to assert the transport works
 	t.Logf("READING RESPONSE...")
-	conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+	_ = conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(conn)
 	t.Logf("READ RESPONSE: response=%q err=%v", buf.String(), err)

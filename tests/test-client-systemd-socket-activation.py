@@ -5,7 +5,7 @@ Spins up a client and tests systemd socket activation.
 """
 
 from common import LOCALHOST, RootCert, STATUS_PORT, SocketPair, TcpClient, TlsServer, print_ok, run_ghostunnel, terminate
-from distutils.spawn import find_executable
+from shutil import which as find_executable
 import sys
 
 if __name__ == "__main__":
@@ -33,8 +33,8 @@ if __name__ == "__main__":
                 '--listen={0}:13001'.format(LOCALHOST),
                 '--listen={0}:{1}'.format(LOCALHOST, STATUS_PORT),
                 '--fdname=client:status',
-                '-E=GHOSTUNNEL_INTEGRATION_TEST',
-                '-E=GHOSTUNNEL_INTEGRATION_ARGS',
+                '--setenv=GHOSTUNNEL_INTEGRATION_TEST',
+                '--setenv=GHOSTUNNEL_INTEGRATION_ARGS',
                 ])
 
         # Connect on status port to trigger socket activation

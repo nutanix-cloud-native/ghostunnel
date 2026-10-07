@@ -19,9 +19,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -144,16 +142,16 @@ func statusTargetWithResponseStatusCode(code int) (statusResponse, int) {
 	response := httptest.NewRecorder()
 	handler := newStatusHandler(func() (net.Conn, error) {
 		u, _ := url.Parse(statusTarget.URL) // NOTE: I tried using statusTarget.Config.Addr instead, but it wasn't set.
-		return net.Dial("tcp", fmt.Sprintf("%s:%s", u.Hostname(), u.Port()))
+		return net.Dial("tcp", net.JoinHostPort(u.Hostname(), u.Port()))
 	}, statusTarget.URL)
 
 	req := httptest.NewRequest(http.MethodGet, "/not-empty", nil)
 	handler.Listening() // NOTE: required for non-503 backend response code.
 	handler.ServeHTTP(response, req)
 	res := response.Result()
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
-	data, _ := ioutil.ReadAll(res.Body)
+	data, _ := io.ReadAll(res.Body)
 
 	statusResp := statusResponse{}
 	_ = json.Unmarshal(data, &statusResp)

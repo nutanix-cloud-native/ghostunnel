@@ -74,7 +74,7 @@ func dialWithDialer(dialer Dialer, timeout time.Duration, network, addr string, 
 	err = <-errChannel
 
 	if err != nil {
-		rawConn.Close()
+		_ = rawConn.Close()
 		return nil, err
 	}
 

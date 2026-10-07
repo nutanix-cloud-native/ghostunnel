@@ -111,9 +111,8 @@ func buildConfig(enabledCipherSuites string) (*tls.Config, error) {
 	}
 
 	return &tls.Config{
-		PreferServerCipherSuites: true,
-		MinVersion:               tls.VersionTLS12,
-		CipherSuites:             suites,
+		MinVersion:   tls.VersionTLS12,
+		CipherSuites: suites,
 	}, nil
 }
 

@@ -73,7 +73,7 @@ Ghostunnel is available through [GitHub releases][rel] and through [Docker Hub][
     # Compile for local architecture
     make ghostunnel
 
-Note that ghostunnel requires Go 1.19 or later to build, and CGO is required for
+Note that ghostunnel requires Go 1.27 or later to build, and CGO is required for
 PKCS#11 support.
 
 [rel]: https://github.com/ghostunnel/ghostunnel/releases
@@ -83,7 +83,7 @@ PKCS#11 support.
 
 Ghostunnel has an extensive suite of integration tests. Our integration test
 suite requires Python 3.5 (or later) and [gocovmerge][gcvm] to run. We use [Go
-modules][gomod] for managing vendored dependencies. 
+modules][gomod] for dependencies (downloaded by the Go toolchain; not vendored). 
 
 To run tests:
 
@@ -91,7 +91,7 @@ To run tests:
     make test
 
     # Option 2: run unit & integration tests in a Docker container
-    GO_VERSION=1.19 make docker-test
+    GO_VERSION=1.27 make docker-test
 
     # Open coverage information in browser
     go tool cover -html coverage-merged.out

@@ -1,0 +1,17 @@
+version: "2"
+linters:
+  exclusions:
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - testdata$
+      - vendor$
+      - tests$
+    rules:
+      # TODO: re-enable errcheck and ineffassign on tests after cleaning
+      # unchecked Close/Remove/Write and unused err assignments in *_test.go.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - ineffassign

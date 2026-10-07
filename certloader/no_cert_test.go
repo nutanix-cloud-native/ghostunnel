@@ -17,7 +17,6 @@
 package certloader
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -25,9 +24,9 @@ import (
 )
 
 func TestNoCertificate(t *testing.T) {
-	cabundle, err := ioutil.TempFile("", "ghostunnel-test")
+	cabundle, err := os.CreateTemp("", "ghostunnel-test")
 	assert.Nil(t, err, "temp file error")
-	defer os.Remove(cabundle.Name())
+	defer func() { _ = os.Remove(cabundle.Name()) }()
 
 	_, err = cabundle.Write([]byte(testCertificate))
 	assert.Nil(t, err, "temp file error")
@@ -48,9 +47,9 @@ func TestNoCertificate(t *testing.T) {
 }
 
 func TestNoCertificateInvalid(t *testing.T) {
-	cabundle, err := ioutil.TempFile("", "ghostunnel-test")
+	cabundle, err := os.CreateTemp("", "ghostunnel-test")
 	assert.Nil(t, err, "temp file error")
-	defer os.Remove(cabundle.Name())
+	defer func() { _ = os.Remove(cabundle.Name()) }()
 
 	_, err = cabundle.Write([]byte("invalid"))
 	assert.Nil(t, err, "temp file error")
